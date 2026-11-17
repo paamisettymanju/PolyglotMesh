@@ -30,6 +30,17 @@ class ExecutionApiTest {
     }
 
     @Test
+    void advertisesOnlySupportedLanguages() {
+        client.get().uri("/api/languages")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        ["Python","JavaScript"]
+                        """);
+    }
+
+    @Test
     void executesPythonThroughTheHttpApi() {
         client.post().uri("/api/execute")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -41,6 +41,7 @@ The UI defaults to the Python editor. Choose JavaScript in the language selector
 | `VITE_API_BASE_URL` | Empty | Optional frontend API base URL; the Vite development proxy is used when unset |
 
 The health endpoint is `GET http://localhost:8080/actuator/health`.
+The supported language list is available at `GET http://localhost:8080/api/languages`.
 
 Submit code with `POST http://localhost:8080/api/execute`:
 
