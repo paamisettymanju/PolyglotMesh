@@ -1,5 +1,6 @@
 package com.infotact.polyglotmesh.execution;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ public class ExecutionController {
     }
 
     @PostMapping("/execute")
-    public Mono<ExecutionResult> execute(@RequestBody ExecutionRequest request) {
+    public Mono<ExecutionResult> execute(@Valid @RequestBody ExecutionRequest request) {
         return Mono.fromCallable(
                         () -> executionService.execute(request.language(), request.code()))
                 .subscribeOn(Schedulers.boundedElastic());

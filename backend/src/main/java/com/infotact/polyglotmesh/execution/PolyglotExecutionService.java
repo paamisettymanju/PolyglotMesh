@@ -6,17 +6,21 @@ import java.nio.charset.StandardCharsets;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.EnvironmentAccess;
 import org.graalvm.polyglot.HostAccess;
-import org.graalvm.polyglot.IOAccess;
+import org.graalvm.polyglot.io.IOAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.ResourceLimits;
 import org.graalvm.polyglot.Source;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PolyglotExecutionService {
     public static final int MAX_SOURCE_LENGTH = 50_000;
 
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(PolyglotExecutionService.class);
     private static final int MAX_OUTPUT_BYTES = 64_000;
     private static final int MAX_ERROR_LENGTH = 2_000;
     private static final long MAX_STATEMENTS = 100_000;
@@ -47,15 +51,27 @@ public class PolyglotExecutionService {
                 .allowCreateThread(false)
                 .allowEnvironmentAccess(EnvironmentAccess.NONE)
                 .allowPolyglotAccess(PolyglotAccess.NONE)
+                .option("engine.WarnInterpreterOnly", "false")
                 .resourceLimits(RESOURCE_LIMITS)
                 .out(output)
                 .err(errorOutput)
                 .build()) {
             context.eval(Source.newBuilder(language.polyglotId(), code, "user-code").buildLiteral());
         } catch (PolyglotException exception) {
-            error = exception.isResourceExhausted()
+            boolean pythonResourceLimitFailure =
+                    language == ExecutionLanguage.PYTHON
+                            && exception.getMessage() != null
+                            && exception.getMessage().contains(
+                                    "trying to release the GIL with invalid hold count");
+            if (exception.isHostException() || pythonResourceLimitFailure) {
+                LOGGER.warn("GraalVM guest execution encountered an internal runtime failure.",
+                        exception);
+            }
+            error = exception.isResourceExhausted() || pythonResourceLimitFailure
                     ? "Execution exceeded the resource limit."
-                    : safeMessage(exception.getMessage());
+                    : exception.isHostException()
+                            ? "Execution failed due to an internal runtime error."
+                            : safeMessage(exception.getMessage());
         }
 
         String diagnostics = errorOutput.text();
