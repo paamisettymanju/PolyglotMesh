@@ -30,6 +30,12 @@ Use the project root for Git commands. Keep frontend sources in `frontend/` and 
 implemented and its backend/frontend checks plus browser smoke tests are passing.
 The verified runtime is Microsoft OpenJDK 21.0.13 with GraalVM Polyglot 24.1.2.
 
+**Progress update — Wednesday, November 18, 2026:** Day 2 has no pending tasks.
+Day 3 is implemented: API request/response and error contracts are covered,
+frontend API URL configuration and both language starter workflows are tested,
+and Python, JavaScript, and runtime-error requests were verified through the
+browser against the separately configured backend.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

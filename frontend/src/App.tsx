@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import Editor from '@monaco-editor/react'
+import { executionEndpoint } from './api'
 import './App.css'
 
 type Language = 'python' | 'javascript'
@@ -36,8 +37,6 @@ const starterCode: Record<Language, string> = {
   javascript: 'console.log("Hello from JavaScript!");\n',
 }
 
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
-
 function App() {
   const [language, setLanguage] = useState<Language>('python')
   const [sourceByLanguage, setSourceByLanguage] =
@@ -59,7 +58,7 @@ function App() {
     setRequestError(null)
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/execute`, {
+      const response = await fetch(executionEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language, code }),

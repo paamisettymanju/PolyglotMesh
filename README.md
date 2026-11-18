@@ -32,6 +32,18 @@ Open the frontend URL printed by Vite (by default, `http://localhost:5173`). The
 
 The UI defaults to the Python editor. Choose JavaScript in the language selector, edit the Monaco editor, and select **Run code** to submit a program and view its output or error.
 
+The Vite development server proxies `/api` and `/actuator` to
+`http://localhost:8080` by default. To call a backend directly, set
+`VITE_API_BASE_URL` before starting or building the frontend; for example:
+
+```powershell
+$env:VITE_API_BASE_URL = "http://localhost:8080"
+npm.cmd --prefix frontend run dev
+```
+
+For a browser request to a different backend origin, add the frontend origin to
+`APP_CORS_ALLOWED_ORIGINS` on the backend.
+
 ## Backend configuration
 
 | Variable | Default | Description |
@@ -52,7 +64,21 @@ Submit code with `POST http://localhost:8080/api/execute`:
 }
 ```
 
-The response contains the selected `language`, a `success` flag, captured `output`, an optional `error`, and `executionTimeMs`. Supported language values are `python`, `javascript`, and `js`. Source code is limited to 50,000 characters; invalid JSON, unsupported languages, and invalid or oversized requests return HTTP 400 with a JSON `error` message.
+The response contains the selected `language`, a `success` flag, captured `output`, an `error` string or `null`, and `executionTimeMs`:
+
+```json
+{
+  "language": "python",
+  "success": true,
+  "output": "Hello from PolyglotMesh!\n",
+  "error": null,
+  "executionTimeMs": 12
+}
+```
+
+Supported language values are `python`, `javascript`, and `js`. Source code is
+limited to 50,000 characters; invalid JSON, unsupported languages, and invalid
+or oversized requests return HTTP 400 with a JSON `error` message.
 
 ## Checks
 

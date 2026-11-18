@@ -83,6 +83,43 @@ describe('PolyglotMesh workspace', () => {
     )
   })
 
+  it('submits the JavaScript starter program with JavaScript syntax selected', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          language: 'javascript',
+          success: true,
+          output: 'Hello from JavaScript!\n',
+          error: null,
+          executionTimeMs: 2,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    render(<App />)
+
+    fireEvent.change(screen.getByLabelText('Programming language'), {
+      target: { value: 'javascript' },
+    })
+    expect(screen.getByLabelText('javascript code editor')).toHaveValue(
+      'console.log("Hello from JavaScript!");\n',
+    )
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(await screen.findByText('Hello from JavaScript!')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/execute',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          language: 'javascript',
+          code: 'console.log("Hello from JavaScript!");\n',
+        }),
+      }),
+    )
+  })
+
   it('renders execution errors without presenting them as successful output', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(

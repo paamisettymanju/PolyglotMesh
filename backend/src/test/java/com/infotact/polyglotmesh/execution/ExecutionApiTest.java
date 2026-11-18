@@ -25,8 +25,11 @@ class ExecutionApiTest {
         client.get().uri("/actuator/health")
                 .exchange()
                 .expectStatus().isOk()
+                .expectHeader().contentType("application/vnd.spring-boot.actuator.v3+json")
                 .expectBody()
-                .jsonPath("$.status").isEqualTo("UP");
+                .json("""
+                        {"status":"UP"}
+                        """, true);
     }
 
     @Test
@@ -44,13 +47,21 @@ class ExecutionApiTest {
     void executesPythonThroughTheHttpApi() {
         client.post().uri("/api/execute")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new ExecutionRequest("python", "print('Hello from Python!')"))
+                .bodyValue("""
+                        {"language":"python","code":"print('Hello from Python!')"}
+                        """)
                 .exchange()
                 .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
                 .expectBody()
                 .jsonPath("$.language").isEqualTo("python")
                 .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.output").isEqualTo("Hello from Python!\n");
+                .jsonPath("$.output").isEqualTo("Hello from Python!\n")
+                .jsonPath("$.error").value(value ->
+                        org.assertj.core.api.Assertions.assertThat(value).isNull())
+                .jsonPath("$.executionTimeMs").value(value ->
+                        org.assertj.core.api.Assertions.assertThat(value)
+                                .isInstanceOf(Number.class));
     }
 
     @Test
@@ -278,9 +289,11 @@ class ExecutionApiTest {
                 .bodyValue("{")
                 .exchange()
                 .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.error").isEqualTo(
-                        "Request body must be valid JSON with a language and code.");
+                .json("""
+                        {"error":"Request body must be valid JSON with a language and code."}
+                        """, true);
     }
 
     @Test
@@ -296,4 +309,5 @@ class ExecutionApiTest {
                 corsConfiguration.checkOrigin("https://untrusted.example"))
                 .isNull();
     }
+
 }
