@@ -143,6 +143,28 @@ describe('PolyglotMesh workspace', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Execution error')
   })
 
+  it('renders multiline output in the console without collapsing line breaks', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          language: 'python',
+          success: true,
+          output: 'first line\nsecond line\nthird line\n',
+          error: null,
+          executionTimeMs: 3,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect((await screen.findByText(/first line/)).textContent).toBe(
+      'first line\nsecond line\nthird line\n',
+    )
+  })
+
   it('displays API validation errors and handles unavailable backends', async () => {
     const fetchMock = vi.mocked(fetch)
     fetchMock.mockResolvedValue(
@@ -165,6 +187,44 @@ describe('PolyglotMesh workspace', () => {
         ),
       ).toBeInTheDocument()
     })
+  })
+
+  it('distinguishes a server error response from an unavailable backend', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('<html>Internal server error</html>', {
+        status: 500,
+        headers: { 'Content-Type': 'text/html' },
+      }),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(
+      await screen.findByText('The execution request failed (HTTP 500).'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
+    expect(
+      screen.queryByText(
+        'Could not connect to PolyglotMesh. Start the backend and try again.',
+      ),
+    ).not.toBeInTheDocument()
+  })
+
+  it('explains a gateway response from the dev proxy as an unavailable backend', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('', { status: 502 }),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(
+      await screen.findByText(
+        'Could not connect to PolyglotMesh. Start the backend and try again.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
   })
 
   it('announces pending execution and distinguishes successful empty output', async () => {
@@ -228,5 +288,30 @@ describe('PolyglotMesh workspace', () => {
         'The execution service returned an invalid response.',
       ),
     ).toBeInTheDocument()
+  })
+
+  it('rejects contradictory execution success and error fields', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          language: 'python',
+          success: true,
+          output: '',
+          error: 'An error cannot accompany a successful run.',
+          executionTimeMs: 1,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(
+      await screen.findByText(
+        'The execution service returned an invalid response.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
   })
 })

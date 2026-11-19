@@ -25,6 +25,7 @@ function isExecutionResult(value: unknown): value is ExecutionResult {
     typeof value.output === 'string' &&
     'error' in value &&
     (typeof value.error === 'string' || value.error === null) &&
+    (value.success ? value.error === null : typeof value.error === 'string') &&
     'executionTimeMs' in value &&
     typeof value.executionTimeMs === 'number' &&
     Number.isFinite(value.executionTimeMs) &&
@@ -64,9 +65,16 @@ function App() {
         body: JSON.stringify({ language, code }),
       })
 
-      const body: unknown = await response.json()
+      const body: unknown = await response.json().catch(() => undefined)
 
       if (!response.ok) {
+        if ([502, 503, 504].includes(response.status)) {
+          setRequestError(
+            'Could not connect to PolyglotMesh. Start the backend and try again.',
+          )
+          return
+        }
+
         const message =
           typeof body === 'object' &&
           body !== null &&

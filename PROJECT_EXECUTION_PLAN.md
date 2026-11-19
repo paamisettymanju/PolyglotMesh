@@ -36,6 +36,12 @@ frontend API URL configuration and both language starter workflows are tested,
 and Python, JavaScript, and runtime-error requests were verified through the
 browser against the separately configured backend.
 
+**Progress update — Thursday, November 19, 2026:** Day 3 has no pending tasks.
+Day 4 is implemented: the editor and console use a responsive split layout;
+multiline/empty output, pending requests, duplicate-run prevention, runtime and
+HTTP failures are covered. Browser checks verified desktop/mobile layouts,
+both language runs, and the disconnected-backend message.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

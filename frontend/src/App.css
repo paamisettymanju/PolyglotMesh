@@ -172,6 +172,9 @@ h1 {
 }
 
 .workspace-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.42fr);
+  grid-template-rows: auto minmax(300px, auto);
   overflow: hidden;
   border: 1px solid #ffffff14;
   border-radius: 10px;
@@ -189,6 +192,7 @@ h1 {
 }
 
 .editor-toolbar {
+  grid-column: 1 / -1;
   border-bottom: 1px solid #ffffff0d;
   background: #1a1b20;
 }
@@ -267,12 +271,19 @@ h1 {
 }
 
 .editor-container {
+  grid-column: 1;
   height: 380px;
   min-height: 260px;
 }
 
 .console-panel {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   border-top: 1px solid #ffffff10;
+  border-left: 1px solid #ffffff10;
   background: #16171c;
 }
 
@@ -318,8 +329,9 @@ h1 {
 }
 
 .console-output {
+  flex: 1;
   min-height: 76px;
-  max-height: 180px;
+  max-height: none;
   margin: 0;
   overflow: auto;
   padding: 14px 16px 18px;
@@ -390,6 +402,20 @@ h1 {
 
   .editor-container {
     height: 340px;
+  }
+
+  .workspace-frame {
+    display: block;
+  }
+
+  .console-panel {
+    display: block;
+    border-top: 1px solid #ffffff10;
+    border-left: 0;
+  }
+
+  .console-output {
+    max-height: 180px;
   }
 
   .editor-toolbar,

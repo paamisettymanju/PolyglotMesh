@@ -79,6 +79,8 @@ The response contains the selected `language`, a `success` flag, captured `outpu
 Supported language values are `python`, `javascript`, and `js`. Source code is
 limited to 50,000 characters; invalid JSON, unsupported languages, and invalid
 or oversized requests return HTTP 400 with a JSON `error` message.
+Unexpected server failures return HTTP 500 with a generic JSON error; internal
+exception details are logged on the backend, not exposed to clients.
 
 ## Checks
 
