@@ -140,6 +140,27 @@ class ExecutionApiTest {
     }
 
     @Test
+    void runtimeErrorResponseKeepsTheExecutionResultContract() {
+        client.post().uri("/api/execute")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ExecutionRequest("javascript", "throw new Error('contract check')"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.language").isEqualTo("javascript")
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.output").isEqualTo("")
+                .jsonPath("$.error").value(value ->
+                        org.assertj.core.api.Assertions.assertThat(value.toString())
+                                .contains("contract check")
+                                .doesNotContain("at org.springframework"))
+                .jsonPath("$.executionTimeMs").value(value ->
+                        org.assertj.core.api.Assertions.assertThat(value)
+                                .isInstanceOf(Number.class));
+    }
+
+    @Test
     void createsAFreshContextForEveryExecution() {
         ExecutionRequest request = new ExecutionRequest(
                 "python", "counter = globals().get('counter', 0) + 1\nprint(counter)");
@@ -301,6 +322,10 @@ class ExecutionApiTest {
         org.assertj.core.api.Assertions.assertThat(
                 corsConfiguration.checkOrigin("http://localhost:5173"))
                 .isEqualTo("http://localhost:5173");
+        org.assertj.core.api.Assertions.assertThat(corsConfiguration.getAllowedMethods())
+                .containsExactly("GET", "POST", "OPTIONS");
+        org.assertj.core.api.Assertions.assertThat(corsConfiguration.getAllowedHeaders())
+                .containsExactly("Content-Type");
     }
 
     @Test

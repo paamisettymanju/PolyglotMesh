@@ -42,7 +42,9 @@ npm.cmd --prefix frontend run dev
 ```
 
 For a browser request to a different backend origin, add the frontend origin to
-`APP_CORS_ALLOWED_ORIGINS` on the backend.
+`APP_CORS_ALLOWED_ORIGINS` on the backend. `VITE_API_BASE_URL` is embedded when
+Vite starts/builds, so configure it before starting the development server or
+building the frontend.
 
 ## Backend configuration
 
@@ -81,6 +83,10 @@ limited to 50,000 characters; invalid JSON, unsupported languages, and invalid
 or oversized requests return HTTP 400 with a JSON `error` message.
 Unexpected server failures return HTTP 500 with a generic JSON error; internal
 exception details are logged on the backend, not exposed to clients.
+The UI reports the execution duration only when the API response includes it;
+invalid response bodies and HTTP failures are shown as request errors, not
+successful executions. A direct connection failure or HTTP 502/503/504 response
+from a development proxy is shown as a backend-unavailable message.
 
 ## Checks
 

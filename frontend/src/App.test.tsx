@@ -165,6 +165,27 @@ describe('PolyglotMesh workspace', () => {
     )
   })
 
+  it('accepts a valid execution response without optional timing metadata', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          language: 'python',
+          success: true,
+          output: 'Timing was not supplied.\n',
+          error: null,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(await screen.findByText('Timing was not supplied.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Completed')
+    expect(screen.queryByText(/\d+ ms/)).not.toBeInTheDocument()
+  })
+
   it('displays API validation errors and handles unavailable backends', async () => {
     const fetchMock = vi.mocked(fetch)
     fetchMock.mockResolvedValue(
@@ -211,6 +232,42 @@ describe('PolyglotMesh workspace', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('uses the HTTP status when an API error response is not JSON', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('Bad request', {
+        status: 400,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(
+      await screen.findByText('The execution request failed (HTTP 400).'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
+  })
+
+  it('rejects a successful response that is not valid JSON', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('not JSON', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    )
+    render(<App />)
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+
+    expect(
+      await screen.findByText(
+        'The execution service returned an invalid response.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
+  })
+
   it('explains a gateway response from the dev proxy as an unavailable backend', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response('', { status: 502 }),
@@ -238,6 +295,8 @@ describe('PolyglotMesh workspace', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /run code/i }))
     expect(screen.getByRole('status')).toHaveTextContent('Running')
+    expect(screen.getByRole('region', { name: 'Execution console' }))
+      .toHaveAttribute('aria-busy', 'true')
 
     resolveResponse?.(
       new Response(
@@ -256,6 +315,8 @@ describe('PolyglotMesh workspace', () => {
       await screen.findByText('Program finished without output.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Completed')
+    expect(screen.getByRole('region', { name: 'Execution console' }))
+      .toHaveAttribute('aria-busy', 'false')
   })
 
   it('rejects malformed success responses and prevents duplicate submissions', async () => {

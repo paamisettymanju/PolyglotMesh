@@ -42,6 +42,13 @@ multiline/empty output, pending requests, duplicate-run prevention, runtime and
 HTTP failures are covered. Browser checks verified desktop/mobile layouts,
 both language runs, and the disconnected-backend message.
 
+**Progress update — Friday, November 20, 2026:** Day 4 has no pending tasks.
+Day 5 is implemented: stable execution error and response contracts, explicit
+CORS assertions, accessible pending state, optional timing metadata, malformed
+and failed HTTP response handling, and direct API-base configuration are
+covered. Browser checks confirmed both language runs, runtime errors, and
+configured/unconfigured CORS origins.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

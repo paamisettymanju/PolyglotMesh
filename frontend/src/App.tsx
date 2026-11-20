@@ -10,7 +10,7 @@ type ExecutionResult = {
   success: boolean
   output: string
   error: string | null
-  executionTimeMs: number
+  executionTimeMs?: number
 }
 
 function isExecutionResult(value: unknown): value is ExecutionResult {
@@ -26,10 +26,10 @@ function isExecutionResult(value: unknown): value is ExecutionResult {
     'error' in value &&
     (typeof value.error === 'string' || value.error === null) &&
     (value.success ? value.error === null : typeof value.error === 'string') &&
-    'executionTimeMs' in value &&
-    typeof value.executionTimeMs === 'number' &&
-    Number.isFinite(value.executionTimeMs) &&
-    value.executionTimeMs >= 0
+    (!('executionTimeMs' in value) ||
+      (typeof value.executionTimeMs === 'number' &&
+        Number.isFinite(value.executionTimeMs) &&
+        value.executionTimeMs >= 0))
   )
 }
 
@@ -227,12 +227,16 @@ function App() {
             />
           </div>
 
-          <section className="console-panel" aria-label="Execution console">
+          <section
+            className="console-panel"
+            aria-label="Execution console"
+            aria-busy={isRunning}
+          >
             <div className="console-toolbar">
               <h2>Console</h2>
               <div className="console-meta">
-                {result && (
-                  <span>{Math.max(0, result.executionTimeMs)} ms</span>
+                {typeof result?.executionTimeMs === 'number' && (
+                  <span>{result.executionTimeMs} ms</span>
                 )}
                 <span
                   className={`execution-status ${isRunning ? 'active' : ''}`}
