@@ -49,6 +49,13 @@ and failed HTTP response handling, and direct API-base configuration are
 covered. Browser checks confirmed both language runs, runtime errors, and
 configured/unconfigured CORS origins.
 
+**Progress update — Saturday, November 21, 2026:** Day 5 has no pending tasks.
+Day 6 is implemented: request bodies, source code, output, guest statements,
+and concurrent executions have explicit limits; oversized and saturated
+requests receive clear errors; exhaustion and health responsiveness are tested.
+The UI preserves editor contents and displays limit responses, and the README
+documents configuration and the in-process isolation boundary.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

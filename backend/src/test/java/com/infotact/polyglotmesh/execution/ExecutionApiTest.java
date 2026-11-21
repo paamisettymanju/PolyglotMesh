@@ -22,6 +22,10 @@ class ExecutionApiTest {
 
     @Test
     void healthEndpointReportsApplicationStatus() {
+        assertHealthEndpointReportsApplicationStatus();
+    }
+
+    private void assertHealthEndpointReportsApplicationStatus() {
         client.get().uri("/actuator/health")
                 .exchange()
                 .expectStatus().isOk()
@@ -242,6 +246,8 @@ class ExecutionApiTest {
                 .expectBody()
                 .jsonPath("$.success").isEqualTo(false)
                 .jsonPath("$.error").isEqualTo("Execution exceeded the resource limit.");
+
+        assertHealthEndpointReportsApplicationStatus();
     }
 
     @Test
@@ -257,6 +263,8 @@ class ExecutionApiTest {
                 .jsonPath("$.error").value(value ->
                         org.assertj.core.api.Assertions.assertThat(value.toString())
                                 .doesNotContain("GIL", "AssertionError"));
+
+        assertHealthEndpointReportsApplicationStatus();
     }
 
     @Test
@@ -301,6 +309,20 @@ class ExecutionApiTest {
                 .jsonPath("$.error").value(error ->
                         org.assertj.core.api.Assertions.assertThat(error.toString())
                                 .contains("code must not exceed 50000 characters."));
+    }
+
+    @Test
+    void rejectsRequestBodiesOverTheConfiguredLimit() {
+        String oversizedJson = "{\"language\":\"python\",\"code\":\""
+                + "x".repeat(140_000) + "\"}";
+        client.post().uri("/api/execute")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(oversizedJson)
+                .exchange()
+                .expectStatus().isEqualTo(413)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("Request body exceeds the 128 KB limit.");
     }
 
     @Test

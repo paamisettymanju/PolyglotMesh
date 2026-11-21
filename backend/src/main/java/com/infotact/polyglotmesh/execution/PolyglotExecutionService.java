@@ -27,6 +27,11 @@ public class PolyglotExecutionService {
     private static final ResourceLimits RESOURCE_LIMITS = ResourceLimits.newBuilder()
             .statementLimit(MAX_STATEMENTS, source -> true)
             .build();
+    private final ExecutionConcurrencyLimiter concurrencyLimiter;
+
+    public PolyglotExecutionService(ExecutionConcurrencyLimiter concurrencyLimiter) {
+        this.concurrencyLimiter = concurrencyLimiter;
+    }
 
     public ExecutionResult execute(String requestedLanguage, String code) {
         ExecutionLanguage language = ExecutionLanguage.from(requestedLanguage);
@@ -38,6 +43,10 @@ public class PolyglotExecutionService {
                     "Code exceeds the " + MAX_SOURCE_LENGTH + " character limit.");
         }
 
+        return concurrencyLimiter.execute(() -> executeWithinLimits(language, code));
+    }
+
+    private ExecutionResult executeWithinLimits(ExecutionLanguage language, String code) {
         long startedAt = System.nanoTime();
         BoundedOutputStream output = new BoundedOutputStream(MAX_OUTPUT_BYTES);
         BoundedOutputStream errorOutput = new BoundedOutputStream(MAX_OUTPUT_BYTES);

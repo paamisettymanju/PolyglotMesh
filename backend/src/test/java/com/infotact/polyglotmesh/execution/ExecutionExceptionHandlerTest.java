@@ -20,4 +20,16 @@ class ExecutionExceptionHandlerTest {
                 .isEqualTo(new ExecutionExceptionHandler.ApiError(
                         "An unexpected error occurred while processing the request."));
     }
+
+    @Test
+    void mapsExecutionCapacityRejectionsToTooManyRequests() {
+        ResponseEntity<ExecutionExceptionHandler.ApiError> response =
+                handler.handleExecutionCapacityExceeded(
+                        new ExecutionCapacityExceededException());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(response.getBody())
+                .isEqualTo(new ExecutionExceptionHandler.ApiError(
+                        "Execution capacity is full. Try again shortly."));
+    }
 }

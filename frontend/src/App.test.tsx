@@ -210,6 +210,39 @@ describe('PolyglotMesh workspace', () => {
     })
   })
 
+  it('explains capacity and request-size rejections without clearing editor contents', async () => {
+    const fetchMock = vi.mocked(fetch)
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Execution capacity is full. Try again shortly.' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    render(<App />)
+    const editor = screen.getByLabelText('python code editor')
+    await userEvent.clear(editor)
+    await userEvent.type(editor, 'print("keep my code")')
+
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+    expect(
+      await screen.findByText('Execution capacity is full. Try again shortly.'),
+    ).toBeInTheDocument()
+    expect(editor).toHaveValue('print("keep my code")')
+    expect(screen.getByRole('status')).toHaveTextContent('Request error')
+
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Request body exceeds the 128 KB limit.' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    await userEvent.click(screen.getByRole('button', { name: /run code/i }))
+    expect(
+      await screen.findByText('Request body exceeds the 128 KB limit.'),
+    ).toBeInTheDocument()
+    expect(editor).toHaveValue('print("keep my code")')
+  })
+
   it('distinguishes a server error response from an unavailable backend', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response('<html>Internal server error</html>', {

@@ -52,6 +52,7 @@ building the frontend.
 | --- | --- | --- |
 | `PORT` | `8080` | Spring Boot HTTP port |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated list of explicitly permitted browser origins |
+| `APP_EXECUTION_MAX_CONCURRENT` | `4` | Maximum number of guest programs executing at the same time; excess runs receive HTTP 429 |
 | `VITE_API_BASE_URL` | Empty | Optional frontend API base URL; the Vite development proxy is used when unset |
 
 The health endpoint is `GET http://localhost:8080/actuator/health`.
@@ -79,8 +80,11 @@ The response contains the selected `language`, a `success` flag, captured `outpu
 ```
 
 Supported language values are `python`, `javascript`, and `js`. Source code is
-limited to 50,000 characters; invalid JSON, unsupported languages, and invalid
-or oversized requests return HTTP 400 with a JSON `error` message.
+limited to 50,000 characters and each JSON request body to 128 KB. Oversized
+source returns HTTP 400 and oversized request bodies return HTTP 413, with a
+JSON `error` message. Invalid JSON and unsupported languages also return HTTP
+400. When all execution slots are occupied, the API rejects new runs with HTTP
+429 rather than queueing guest work.
 Unexpected server failures return HTTP 500 with a generic JSON error; internal
 exception details are logged on the backend, not exposed to clients.
 The UI reports the execution duration only when the API response includes it;
@@ -101,6 +105,10 @@ npm.cmd --prefix frontend run build
 
 The backend disables GraalVM host-class lookup, host access, host file and network I/O, native access, environment access, thread creation, and guest polyglot access. It also bounds source size, captured output, and guest statements. These in-process restrictions are defense in depth and do **not** make executing untrusted code in a public multi-tenant service safe; production deployments that execute hostile code require additional operating-system or container isolation.
 
-Each request is limited to 50,000 source characters, 100,000 guest statements,
-and 64,000 captured bytes per output stream. Exceeding an execution resource or
-output limit returns a failed execution result rather than successful output.
+Each request is limited to 128 KB, 50,000 source characters, 100,000 guest
+statements, and 64,000 captured bytes per output and error stream. At most four
+guest programs execute concurrently by default; configure this with
+`APP_EXECUTION_MAX_CONCURRENT`. Exceeding an execution resource or output limit
+returns a failed execution result rather than successful output; excess
+concurrent requests receive HTTP 429. In-process limits are not a hard wall-clock
+timeout or a substitute for OS/container isolation.
