@@ -59,6 +59,47 @@ describe('PolyglotMesh workspace', () => {
     )
   })
 
+  it('runs code with the advertised keyboard shortcut and announces status', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          language: 'python',
+          success: true,
+          output: 'Keyboard run succeeded.\n',
+          error: null,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    render(<App />)
+
+    const runButton = screen.getByRole('button', { name: /run code/i })
+    expect(runButton).toHaveAttribute(
+      'aria-keyshortcuts',
+      'Control+Enter Meta+Enter',
+    )
+    expect(runButton).toHaveAccessibleDescription(
+      'Keyboard shortcut: Control+Enter or Command+Enter.',
+    )
+    expect(screen.getByRole('link', { name: 'Skip to editor' })).toHaveAttribute(
+      'href',
+      '#workspace-editor',
+    )
+
+    const editor = screen.getByLabelText('python code editor')
+    await userEvent.click(editor)
+    await userEvent.keyboard('{Control>}{Enter}{/Control}')
+
+    expect(await screen.findByText('Keyboard run succeeded.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Completed')
+    expect(screen.getByRole('status')).toHaveAttribute('aria-atomic', 'true')
+
+    await userEvent.keyboard('{Meta>}{Enter}{/Meta}')
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('switches language and preserves each language editor contents', async () => {
     render(<App />)
 

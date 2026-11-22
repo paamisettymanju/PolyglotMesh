@@ -56,6 +56,13 @@ requests receive clear errors; exhaustion and health responsiveness are tested.
 The UI preserves editor contents and displays limit responses, and the README
 documents configuration and the in-process isolation boundary.
 
+**Progress update — Sunday, November 22, 2026:** Day 6 has no pending tasks.
+Day 7 is implemented: frontend tests cover both execution shortcuts, language
+selection and editing, pending and completed states, runtime and API errors;
+keyboard navigation has a skip link, visible focus, and shortcut descriptions.
+Backend API tests cover execution, validation, CORS policy, response errors,
+and prevention of stack-trace disclosure.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

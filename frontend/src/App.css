@@ -9,6 +9,30 @@
     #101116;
 }
 
+.skip-link {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  left: 8px;
+  padding: 8px 12px;
+  transform: translateY(-160%);
+  border-radius: 5px;
+  background: #f2f1f7;
+  color: #101116;
+  font-size: 13px;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid #9aa8ff;
+  outline-offset: 3px;
+}
+
+#workspace-editor:focus {
+  outline: 2px solid #9aa8ff;
+  outline-offset: 6px;
+}
+
 .topbar {
   height: 68px;
   padding: 0 clamp(20px, 5vw, 72px);

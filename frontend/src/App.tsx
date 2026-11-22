@@ -126,12 +126,19 @@ function App() {
     <main
       className="app-shell"
       onKeyDown={(event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key === 'Enter' &&
+          !event.nativeEvent.isComposing
+        ) {
           event.preventDefault()
           void runCode()
         }
       }}
     >
+      <a className="skip-link" href="#workspace-editor">
+        Skip to editor
+      </a>
       <header className="topbar">
         <a className="brand" href="/" aria-label="PolyglotMesh home">
           <span className="brand-mark" aria-hidden="true">
@@ -149,7 +156,7 @@ function App() {
         </span>
       </header>
 
-      <section className="workspace">
+      <section className="workspace" id="workspace-editor" tabIndex={-1}>
         <div className="workspace-heading">
           <div>
             <p className="eyebrow">PLAYGROUND</p>
@@ -163,6 +170,8 @@ function App() {
             type="button"
             onClick={runCode}
             disabled={isRunning}
+            aria-describedby="run-shortcut-description"
+            aria-keyshortcuts="Control+Enter Meta+Enter"
           >
             {isRunning ? (
               <span className="spinner" aria-hidden="true" />
@@ -175,6 +184,9 @@ function App() {
             {!isRunning && <kbd>Ctrl ↵</kbd>}
           </button>
         </div>
+        <span className="sr-only" id="run-shortcut-description">
+          Keyboard shortcut: Control+Enter or Command+Enter.
+        </span>
 
         <div className="workspace-frame">
           <div className="editor-toolbar">
@@ -242,6 +254,7 @@ function App() {
                   className={`execution-status ${isRunning ? 'active' : ''}`}
                   role="status"
                   aria-live="polite"
+                  aria-atomic="true"
                 >
                   <span className="status-dot" aria-hidden="true" />
                   {status}

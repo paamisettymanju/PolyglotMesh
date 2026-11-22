@@ -19,6 +19,8 @@ class ExecutionExceptionHandlerTest {
         assertThat(response.getBody())
                 .isEqualTo(new ExecutionExceptionHandler.ApiError(
                         "An unexpected error occurred while processing the request."));
+        assertThat(response.getBody().error())
+                .doesNotContain("private implementation detail", "IllegalStateException");
     }
 
     @Test
