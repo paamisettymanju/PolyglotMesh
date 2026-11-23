@@ -63,6 +63,13 @@ keyboard navigation has a skip link, visible focus, and shortcut descriptions.
 Backend API tests cover execution, validation, CORS policy, response errors,
 and prevention of stack-trace disclosure.
 
+**Progress update — Monday, November 23, 2026:** Day 7 has no pending tasks.
+Day 8 is implemented: the README now documents runtime prerequisites,
+PowerShell startup and API smoke tests for both languages, HTTP outcomes,
+configuration, and troubleshooting. A clean frontend dependency install,
+backend health/API examples, Vite startup, and all test/lint/build checks were
+verified against the documented commands.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.

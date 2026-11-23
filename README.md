@@ -5,7 +5,7 @@ PolyglotMesh is a local-first code playground for running Python and JavaScript 
 ## Requirements
 
 - Java 17 or later
-- Node.js and npm
+- Node.js 20.19+ or 22.12+ and npm (Vite 8 requirement)
 - Network access on the first run to download Maven and npm dependencies
 
 The backend uses Maven Wrapper; a separate Maven installation is not required.
@@ -14,6 +14,15 @@ GraalVM Polyglot and the JavaScript/Python language dependencies at 24.1.2.
 The application uses a standard JDK; a GraalVM JDK distribution is not required.
 
 ## Run locally
+
+Run the following commands from the repository root in PowerShell. Confirm the
+installed runtimes first:
+
+```powershell
+java -version
+node --version
+npm.cmd --version
+```
 
 Start the backend in one terminal:
 
@@ -31,6 +40,8 @@ npm.cmd --prefix frontend run dev
 Open the frontend URL printed by Vite (by default, `http://localhost:5173`). The Vite development server proxies API requests to the backend at `http://localhost:8080`.
 
 The UI defaults to the Python editor. Choose JavaScript in the language selector, edit the Monaco editor, and select **Run code** to submit a program and view its output or error.
+Use **Ctrl+Enter** (or **Command+Enter** on macOS) to run the selected
+language's code from the keyboard.
 
 The Vite development server proxies `/api` and `/actuator` to
 `http://localhost:8080` by default. To call a backend directly, set
@@ -41,10 +52,13 @@ $env:VITE_API_BASE_URL = "http://localhost:8080"
 npm.cmd --prefix frontend run dev
 ```
 
-For a browser request to a different backend origin, add the frontend origin to
-`APP_CORS_ALLOWED_ORIGINS` on the backend. `VITE_API_BASE_URL` is embedded when
-Vite starts/builds, so configure it before starting the development server or
-building the frontend.
+For a browser request to a different backend origin, add the frontend origin
+(scheme, host, and port) to `APP_CORS_ALLOWED_ORIGINS` on the backend, for
+example `https://playground.example`. `VITE_API_BASE_URL` is embedded when Vite
+starts/builds, so configure it before starting the development server or
+building the frontend. The backend's allowed origins default to
+`http://localhost:5173`; `http://127.0.0.1:5173` is a different origin and must
+be explicitly allowed when using it to access the backend directly.
 
 ## Backend configuration
 
@@ -58,6 +72,13 @@ building the frontend.
 The health endpoint is `GET http://localhost:8080/actuator/health`.
 The supported language list is available at `GET http://localhost:8080/api/languages`.
 
+Verify the backend from PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:8080/actuator/health
+Invoke-RestMethod http://localhost:8080/api/languages
+```
+
 Submit code with `POST http://localhost:8080/api/execute`:
 
 ```json
@@ -65,6 +86,29 @@ Submit code with `POST http://localhost:8080/api/execute`:
   "language": "python",
   "code": "print(\"Hello from PolyglotMesh!\")"
 }
+```
+
+For a repeatable PowerShell smoke test, the following should return
+`success: True` and `Hello from PolyglotMesh!` followed by a newline:
+
+```powershell
+$body = @{
+  language = "python"
+  code = 'print("Hello from PolyglotMesh!")'
+} | ConvertTo-Json
+Invoke-RestMethod http://localhost:8080/api/execute `
+  -Method Post -ContentType "application/json" -Body $body
+```
+
+For JavaScript, the corresponding request is:
+
+```powershell
+$body = @{
+  language = "javascript"
+  code = 'console.log("Hello from JavaScript!")'
+} | ConvertTo-Json
+Invoke-RestMethod http://localhost:8080/api/execute `
+  -Method Post -ContentType "application/json" -Body $body
 ```
 
 The response contains the selected `language`, a `success` flag, captured `output`, an `error` string or `null`, and `executionTimeMs`:
@@ -91,6 +135,31 @@ The UI reports the execution duration only when the API response includes it;
 invalid response bodies and HTTP failures are shown as request errors, not
 successful executions. A direct connection failure or HTTP 502/503/504 response
 from a development proxy is shown as a backend-unavailable message.
+
+Guest-code failures (for example, syntax errors or resource exhaustion) are
+execution results with HTTP 200 and `success: false`. Invalid request bodies
+return HTTP 400, bodies over 128 KB return HTTP 413, full execution capacity
+returns HTTP 429, and unexpected server errors return HTTP 500.
+
+## Troubleshooting
+
+- **Backend does not start:** confirm Java 17+ is on `PATH`, allow the Maven
+  Wrapper to download Maven/dependencies on first use, and check whether port
+  8080 is already occupied. Set `PORT` to a free port if needed; update the Vite
+  proxy target in `frontend/vite.config.ts` to match that port.
+- **Frontend dependencies or Vite fail to install/start:** confirm Node.js is
+  20.19+ or 22.12+, then run `npm.cmd --prefix frontend ci` from the repository
+  root. The first install requires network access.
+- **UI reports that the backend is unavailable:** keep the backend running,
+  verify `http://localhost:8080/actuator/health`, and confirm the Vite proxy
+  targets the backend port.
+- **Direct browser requests fail with a CORS error:** ensure the exact frontend
+  origin (including scheme, host, and port) is present in
+  `APP_CORS_ALLOWED_ORIGINS`, then restart the backend. Requests through the
+  same-origin Vite proxy do not require changing CORS configuration.
+- **Execution is rejected:** review the request-size and source-code limits
+  above; HTTP 429 means all configured guest-execution slots are occupied, so
+  retry after an active run completes.
 
 ## Checks
 
