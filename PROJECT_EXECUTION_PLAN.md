@@ -70,6 +70,15 @@ configuration, and troubleshooting. A clean frontend dependency install,
 backend health/API examples, Vite startup, and all test/lint/build checks were
 verified against the documented commands.
 
+**Progress update — Tuesday, November 24, 2026:** Days 1–8 have no pending
+tasks. Day 9 final acceptance is complete: backend tests, frontend clean
+install/tests/lint/build pass; the documented Python and JavaScript flows,
+runtime/resource failures, and unavailable-backend state were re-tested through
+the running application. No generated outputs, dependency directories, or
+secret configuration are tracked. The two user-provided project PDFs remain
+untracked and are intentionally excluded from commits. In-process guest
+execution still requires OS/container isolation for hostile-code deployments.
+
 ### Day 1 — Monday, November 16 — Deliver the full-stack application foundation
 
 - **Backend:** verify the Spring Boot/WebFlux bootstrap, `/api/execute` controller, and GraalVM execution service; implement request validation and clear HTTP 400 errors; configure the port and an explicit frontend CORS allowlist; expose health; add the Maven Wrapper if needed.
